@@ -17,7 +17,6 @@
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
-#include <boost/foreach.hpp>
 #include "cppmetrics/core/snapshot.h"
 
 namespace cppmetrics {
@@ -105,7 +104,7 @@ double Snapshot::getMean() const {
     }
 
     ValueVector::value_type mean(0);
-    BOOST_FOREACH(ValueVector::value_type d, values_) {
+    for (ValueVector::value_type d: values_) {
         mean += d;
     }
     return static_cast<double>(mean) / values_.size();
@@ -120,7 +119,7 @@ double Snapshot::getStdDev() const {
     double mean_value = getMean();
     double sum = 0;
 
-    BOOST_FOREACH(ValueVector::value_type value, values_) {
+    for (ValueVector::value_type value: values_) {
         double diff = static_cast<double>(value) - mean_value;
         sum += diff * diff;
     }

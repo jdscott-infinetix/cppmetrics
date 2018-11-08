@@ -16,36 +16,53 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/time_facet.hpp>
+#include <chrono>
+#include <locale>
+#include <ctime>
+#include <string>
+#include <sstream>
 #include "cppmetrics/core/types.h"
 
 namespace cppmetrics {
 namespace core {
 
-inline boost::posix_time::time_duration get_duration_from_epoch() {
-    boost::posix_time::ptime time_t_epoch(boost::gregorian::date(1970, 1, 1));
-    boost::posix_time::ptime now =
-            boost::posix_time::microsec_clock::local_time();
-    return (now - time_t_epoch);
+inline std::uint64_t get_millis_from_epoch() {
+	auto now = std::chrono::system_clock::now();
+	auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+	return dur.count();
 }
 
-inline boost::uint64_t get_millis_from_epoch() {
-    return get_duration_from_epoch().total_milliseconds();
-}
-
-inline boost::uint64_t get_seconds_from_epoch() {
-    return get_duration_from_epoch().total_seconds();
+inline std::uint64_t get_seconds_from_epoch() {
+	auto now = std::chrono::system_clock::now();
+	auto dir = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
+	return dir.count();
 }
 
 inline std::string utc_timestamp(const std::locale& current_locale) {
-    std::ostringstream ss;
-    // assumes std::cout's locale has been set appropriately for the entire app
-    boost::posix_time::time_facet* t_facet(new boost::posix_time::time_facet());
-    t_facet->time_duration_format("%d-%M-%y %H:%M:%S%F %Q");
-    ss.imbue(std::locale(current_locale, t_facet));
-    ss << boost::posix_time::microsec_clock::universal_time();
-    return ss.str();
+	std::locale loc(current_locale);
+
+	std::time_t timestamp;
+	std::time ( &timestamp );
+
+	const std::time_put<char>& time_put = std::use_facet< std::time_put<char> > (loc);
+
+	std::stringstream s;
+	s.imbue(loc);
+
+	std::tm *localized_time = std::localtime(&timestamp);
+
+	std::string pattern("%d-%M-%y %H:%M:%S%F %Q");
+	time_put.put(s, s, ' ', localized_time, pattern.data(), pattern.data() + pattern.length());
+
+	return s.str();
+
+//    std::ostringstream ss;
+//    // assumes std::cout's locale has been set appropriately for the entire app
+//    boost::posix_time::time_facet* t_facet(new boost::posix_time::time_facet());
+//    t_facet->time_duration_format("%d-%M-%y %H:%M:%S%F %Q");
+//    ss.imbue(std::locale(current_locale, t_facet));
+//    ss << boost::posix_time::microsec_clock::universal_time();
+//    return ss.str();
 }
 
 }
